@@ -106,8 +106,6 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
               _buildResetButton(),
             ],
           ),
-          SizedBox(height: 16),
-          _buildPriceInfo(),
         ],
       ),
     );
@@ -152,29 +150,6 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
     );
   }
 
-  Widget _buildPriceInfo() {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        children: [
-          _buildPriceItem('PRICE', '125,008,000'),
-          _buildPriceItem('시가', '125,501,000'),
-          _buildPriceItem('종가', '125,008,000'),
-          _buildPriceItem('고가', '125,650,000'),
-          _buildPriceItem('저가', '125,008,000'),
-          Spacer(),
-          Text(
-            'VOL: 39,396,14243',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPriceItem(String label, String value) {
     return Padding(
