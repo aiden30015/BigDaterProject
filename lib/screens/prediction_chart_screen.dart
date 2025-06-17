@@ -103,8 +103,6 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
               SizedBox(width: 16),
               _buildPeriodDropdown(),
               Spacer(),
-              _buildDownloadButton(),
-              SizedBox(width: 16),
               _buildResetButton(),
             ],
           ),
@@ -136,27 +134,6 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
             selectedPeriod = newValue!;
           });
         },
-      ),
-    );
-  }
-
-  Widget _buildDownloadButton() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Color(0xFF4A5DB8),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.download, color: Colors.white, size: 16),
-          SizedBox(width: 4),
-          Text(
-            '다운로드하기',
-            style: TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        ],
       ),
     );
   }
