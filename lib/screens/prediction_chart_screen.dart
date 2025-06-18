@@ -11,30 +11,9 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Color(0xFF4A5DB8),
-        elevation: 0,
-        title: Row(
-          spacing: 30,
-          children: [
-            Text(
-              'UPJUEN',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-            _buildTopMenuItem('과거데이터'),
-            _buildTopMenuItem('현재시세'),
-            _buildTopMenuItem('AI 동향 예측'),
-          ],
-        ),
-      ),
-      body: Row(
+    return Container(
+      color: Colors.grey[100],
+      child: Row(
         children: [
           // 왼쪽 메인 차트 영역
           Expanded(
@@ -74,16 +53,6 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTopMenuItem(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 16,
       ),
     );
   }
@@ -146,26 +115,6 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
       child: Text(
         '초기화',
         style: TextStyle(fontSize: 12),
-      ),
-    );
-  }
-
-
-  Widget _buildPriceItem(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.only(right: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-          ),
-          Text(
-            value,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-        ],
       ),
     );
   }
