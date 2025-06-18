@@ -48,17 +48,46 @@ class _CryptoAppState extends State<CryptoApp> with SingleTickerProviderStateMix
       ),
       home: Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xFF4A5DB8),
+          backgroundColor: Color(0xFF2A3990),
           elevation: 0,
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(text: '과거데이터'),
-              Tab(text: '현재시세'),
-              Tab(text: 'AI 동향 예측'),
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 24.0),
+                child: Text(
+                  'UPJUEN',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 32,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: TabBar(
+                  controller: _tabController,
+                  tabs: [
+                    Tab(text: '과거데이터'),
+                    Tab(text: '현재시세'),
+                    Tab(text: 'AI 동향 예측'),
+                  ],
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: Colors.transparent,
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                  unselectedLabelStyle: TextStyle(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
             ],
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.grey,
           ),
         ),
         body: TabBarView(
