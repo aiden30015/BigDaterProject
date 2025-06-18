@@ -31,7 +31,7 @@ class _CryptoAppState extends State<CryptoApp> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'UPJUEN 암호화폐 거래소',
+      title: 'UPJUEON 암호화폐 거래소',
       theme: ThemeData(
         primaryColor: Color(0xFF2A3990),
         fontFamily: 'Jalnan',
@@ -56,7 +56,7 @@ class _CryptoAppState extends State<CryptoApp> with SingleTickerProviderStateMix
               Padding(
                 padding: const EdgeInsets.only(left: 16.0, right: 24.0),
                 child: Text(
-                  'UPJUEN',
+                  'UPJUEON',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
