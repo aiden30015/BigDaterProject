@@ -42,6 +42,8 @@ dependencies:
   candlesticks: ^2.1.0
   interactive_chart: ^0.3.6
   riverpod: ^2.6.1
+  get: ^4.7.2
+  flutter_riverpod: ^2.6.1
 
 dev_dependencies:
   flutter_test:
