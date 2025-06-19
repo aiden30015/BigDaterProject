@@ -5,7 +5,7 @@ part 'price_date_model.g.dart';
 @JsonSerializable()
 class PriceDateModel {
   final String status;
-  final Data data;
+  final List<Data> data;
   final int count; 
 
   PriceDateModel({required this.status, required this.data, required this.count});
