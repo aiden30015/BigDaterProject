@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:big_dater_project/providers/prediction_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:big_dater_project/models/price_date_model.dart';
 
-class PredictionChartScreen extends StatefulWidget {
+class PredictionChartScreen extends ConsumerWidget {
   @override
-  _PredictionChartScreenState createState() => _PredictionChartScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(predictionProvider);
+    final notifier = ref.read(predictionProvider.notifier);
+    final dataList = state.priceDateModel?.data ?? [];
 
-class _PredictionChartScreenState extends State<PredictionChartScreen> {
-  String selectedPeriod = '일간';
-
-  @override
-  Widget build(BuildContext context) {
+    if (state.isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+    if (state.error != null) {
+      return Center(child: Text(state.error!));
+    }
     return Container(
       color: Colors.grey[100],
       child: Row(
@@ -33,9 +40,9 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
               ),
               child: Column(
                 children: [
-                  _buildChartHeader(),
-                  Expanded(child: _buildCandlestickChart()),
-                  _buildVolumeChart(),
+                  _buildChartHeader(context, notifier, state),
+                  Expanded(child: _buildCandlestickChart(dataList)),
+                  _buildVolumeChart(dataList),
                 ],
               ),
             ),
@@ -46,7 +53,7 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
             margin: EdgeInsets.only(top: 16, right: 16, bottom: 16),
             child: Column(
               children: [
-                _buildDetailInfoPanel(),
+                _buildDetailInfoPanel(dataList),
                 SizedBox(height: 16),
                 _buildTechnicalAnalysisPanel(),
               ],
@@ -57,7 +64,7 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
     );
   }
 
-  Widget _buildChartHeader() {
+  Widget _buildChartHeader(BuildContext context, PredictionNotifier notifier, PredictionState state) {
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -70,9 +77,57 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               SizedBox(width: 16),
-              _buildPeriodDropdown(),
+              // 기간 드롭다운은 생략 또는 필요시 구현
+              SizedBox(width: 16),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final now = DateTime.now();
+                  final picked = await showDateRangePicker(
+                    context: context,
+                    firstDate: DateTime(now.year - 5),
+                    lastDate: now,
+                    initialDateRange: state.dateRange,
+                    locale: const Locale('ko'),
+                  );
+                  if (picked != null) {
+                    notifier.updateDateRange(picked);
+                  }
+                },
+                icon: Icon(Icons.date_range, size: 18),
+                label: Text(
+                  state.dateRange == null
+                    ? '날짜 선택'
+                    : '${DateFormat('yyyy.MM.dd').format(state.dateRange.start)} ~ ${DateFormat('yyyy.MM.dd').format(state.dateRange.end)}',
+                  style: TextStyle(fontSize: 13),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF2A3990),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  textStyle: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
               Spacer(),
-              _buildResetButton(),
+              // 초기화 버튼
+              InkWell(
+                onTap: () {
+                  notifier.updateDateRange(DateTimeRange(
+                    start: DateTime(2023, 11, 28),
+                    end: DateTime(2024, 12, 31),
+                  ));
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '초기화',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -80,46 +135,10 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
     );
   }
 
-  Widget _buildPeriodDropdown() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: DropdownButton<String>(
-        value: selectedPeriod,
-        underline: SizedBox(),
-        items: ['일간', '주간', '월간'].map((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-        onChanged: (String? newValue) {
-          setState(() {
-            selectedPeriod = newValue!;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildResetButton() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        '초기화',
-        style: TextStyle(fontSize: 12),
-      ),
-    );
-  }
-
-  Widget _buildCandlestickChart() {
+  Widget _buildCandlestickChart(List<Data> dataList) {
+    if (dataList.isEmpty) {
+      return Center(child: Text('데이터가 없습니다.'));
+    }
     return Container(
       height: 300,
       padding: EdgeInsets.all(16),
@@ -131,66 +150,27 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (value, meta) {
-                  switch (value.toInt()) {
-                    case 0:
-                      return Text('2:00', style: TextStyle(fontSize: 10));
-                    case 1:
-                      return Text('18:00', style: TextStyle(fontSize: 10));
-                    case 2:
-                      return Text('4/21', style: TextStyle(fontSize: 10));
-                    case 3:
-                      return Text('6:00', style: TextStyle(fontSize: 10));
-                    case 4:
-                      return Text('12:00', style: TextStyle(fontSize: 10));
-                    case 5:
-                      return Text('18:00', style: TextStyle(fontSize: 10));
-                    case 6:
-                      return Text('4/22', style: TextStyle(fontSize: 10));
-                    case 7:
-                      return Text('6:00', style: TextStyle(fontSize: 10));
-                    default:
-                      return Text('');
-                  }
+                  int idx = value.toInt();
+                  if (idx < 0 || idx >= dataList.length) return Text('');
+                  final date = dataList[idx].date;
+                  return Text(DateFormat('MM/dd').format(date), style: TextStyle(fontSize: 10));
                 },
               ),
             ),
-            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
             topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
             rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           borderData: FlBorderData(show: false),
           lineBarsData: [
-            // 가격 라인 (빨간색)
+            // 예측 가격 라인
             LineChartBarData(
               spots: [
-                FlSpot(0, 1),
-                FlSpot(1, 0.8),
-                FlSpot(2, 0.6),
-                FlSpot(3, 1.2),
-                FlSpot(4, 2.5),
-                FlSpot(5, 2.2),
-                FlSpot(6, 2.4),
-                FlSpot(7, 2.6),
+                for (int i = 0; i < dataList.length; i++)
+                  FlSpot(i.toDouble(), dataList[i].open),
               ],
               isCurved: false,
               color: Colors.red,
-              barWidth: 2,
-              dotData: FlDotData(show: false),
-            ),
-            // 이동평균선 (녹색)
-            LineChartBarData(
-              spots: [
-                FlSpot(0, 0.5),
-                FlSpot(1, 0.7),
-                FlSpot(2, 0.9),
-                FlSpot(3, 1.1),
-                FlSpot(4, 1.4),
-                FlSpot(5, 1.7),
-                FlSpot(6, 2.0),
-                FlSpot(7, 2.3),
-              ],
-              isCurved: true,
-              color: Colors.green,
               barWidth: 2,
               dotData: FlDotData(show: false),
             ),
@@ -200,22 +180,20 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
     );
   }
 
-  Widget _buildVolumeChart() {
+  Widget _buildVolumeChart(List<Data> dataList) {
     return Container(
       height: 100,
       padding: EdgeInsets.all(16),
       child: BarChart(
         BarChartData(
-          titlesData: FlTitlesData(
-            show: false,
-          ),
+          titlesData: FlTitlesData(show: false),
           borderData: FlBorderData(show: false),
-          barGroups: List.generate(20, (index) {
+          barGroups: List.generate(dataList.length, (index) {
             return BarChartGroupData(
               x: index,
               barRods: [
                 BarChartRodData(
-                  toY: (index % 3 + 1).toDouble(),
+                  toY: (dataList[index].open % 3) + 1,
                   color: index % 2 == 0 ? Colors.red : Colors.blue,
                   width: 4,
                 ),
@@ -227,7 +205,8 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
     );
   }
 
-  Widget _buildDetailInfoPanel() {
+  Widget _buildDetailInfoPanel(List<Data> dataList) {
+    final latest = dataList.isNotEmpty ? dataList.last : null;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -270,31 +249,57 @@ class _PredictionChartScreenState extends State<PredictionChartScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('최초발행', style: TextStyle(fontSize: 12)),
-                    Text('2009.01', style: TextStyle(fontSize: 12)),
+                    Text('날짜', style: TextStyle(fontSize: 12)),
+                    Text(latest != null ? DateFormat('yyyy.MM.dd').format(latest.date) : '-', style: TextStyle(fontSize: 12)),
                   ],
                 ),
                 SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('총 발행한도', style: TextStyle(fontSize: 12)),
-                    Text('21,000,000', style: TextStyle(fontSize: 12)),
+                    Text('시가', style: TextStyle(fontSize: 12)),
+                    Text(latest != null ? latest.open.toStringAsFixed(0) : '-', style: TextStyle(fontSize: 12)),
                   ],
                 ),
-                SizedBox(height: 16),
-                Text(
-                  '디지털 자산 소개',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('고가', style: TextStyle(fontSize: 12)),
+                    Text(latest != null ? latest.high.toStringAsFixed(0) : '-', style: TextStyle(fontSize: 12)),
+                  ],
                 ),
                 SizedBox(height: 8),
-                Text(
-                  '비트코인은 나카모토 사토시(가명)가 개발한 기호로 기반으로 하여 개발된 디지털 자산입니다.\n'
-                  '기존 화폐와 달리 정부, 중앙은행 등의 금융기관의 개입없이 '
-                  '개인들이 온라인 상에서 직접적으로 거래할 수 있습니다.\n'
-                  '전 세계 수십만 대의 컴퓨터에 의해 실시간으로 거래내역이 '
-                  '검증되고 기록되는 블록체인 기술로 구현됩니다.',
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('저가', style: TextStyle(fontSize: 12)),
+                    Text(latest != null ? latest.low.toStringAsFixed(0) : '-', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('종가', style: TextStyle(fontSize: 12)),
+                    Text(latest != null ? latest.close.toStringAsFixed(0) : '-', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('거래량', style: TextStyle(fontSize: 12)),
+                    Text(latest != null ? latest.volume.toStringAsFixed(0) : '-', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('시가총액', style: TextStyle(fontSize: 12)),
+                    Text(latest != null ? latest.marketCap.toStringAsFixed(0) : '-', style: TextStyle(fontSize: 12)),
+                  ],
                 ),
               ],
             ),

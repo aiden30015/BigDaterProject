@@ -49,12 +49,15 @@ class _PriceChartState extends State<PriceChart> {
       return;
     }
 
-    _candles = widget.predictions.map((prediction) {
-      double openPrice = prediction.data.open;
-      double closePrice = prediction.data.close;
-      double highPrice = prediction.data.high;
-      double lowPrice = prediction.data.low;
-      double volume = prediction.data.volume;
+    // 모든 PriceDateModel의 data(List<Data>)를 합쳐서 하나의 리스트로 만듦
+    List<Data> allData = widget.predictions.expand((p) => p.data).toList();
+
+    _candles = allData.map((d) {
+      double openPrice = d.open;
+      double closePrice = d.close;
+      double highPrice = d.high;
+      double lowPrice = d.low;
+      double volume = d.volume;
 
       // NaN/Infinity/null 방지
       if (openPrice.isNaN || openPrice.isInfinite) openPrice = 0;
@@ -74,7 +77,7 @@ class _PriceChartState extends State<PriceChart> {
       }
 
       return Candle(
-        date: prediction.data.date,
+        date: d.date,
         high: highPrice,
         low: lowPrice,
         open: openPrice,
@@ -96,6 +99,9 @@ class _PriceChartState extends State<PriceChart> {
     if (widget.predictions.isEmpty) {
       return Center(child: Text('데이터가 없습니다. 날짜 범위를 선택해주세요.'));
     }
+
+    // 모든 PriceDateModel의 data(List<Data>)를 합쳐서 하나의 리스트로 만듦
+    List<Data> allData = widget.predictions.expand((p) => p.data).toList();
     
     // 차트 타입에 따라 캔들스틱 또는 라인 차트 표시
     return Column(
@@ -131,7 +137,9 @@ class _PriceChartState extends State<PriceChart> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${Formatters.formatDate(widget.startDate)} ~ ${Formatters.formatDate(widget.endDate)}',
+                      allData.isNotEmpty
+                        ? '${Formatters.formatDate(allData.first.date)} ~ ${Formatters.formatDate(allData.last.date)}'
+                        : '',
                       style: TextStyle(fontSize: 12),
                     ),
                     SizedBox(width: 8),
@@ -150,7 +158,7 @@ class _PriceChartState extends State<PriceChart> {
         Expanded(
           child: _showCandleSticks 
             ? _buildCandleStickChart() 
-            : _buildLineChart(),
+            : _buildLineChart(allData),
         ),
       ],
     );
@@ -173,14 +181,12 @@ class _PriceChartState extends State<PriceChart> {
     );
   }
   
-  Widget _buildLineChart() {
-    List<PriceDateModel> optimizedPredictions = _optimizePredictions();
-
-    final spots = optimizedPredictions.map((prediction) {
-      double y = prediction.data.close > 0 ? prediction.data.close : prediction.data.open;
+  Widget _buildLineChart(List<Data> allData) {
+    final spots = allData.map((d) {
+      double y = d.close > 0 ? d.close : d.open;
       if (y.isNaN || y.isInfinite) y = 0;
       return FlSpot(
-        prediction.data.date.millisecondsSinceEpoch.toDouble(),
+        d.date.millisecondsSinceEpoch.toDouble(),
         y,
       );
     }).toList();
@@ -238,7 +244,7 @@ class _PriceChartState extends State<PriceChart> {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 30,
-                interval: _calculateDateInterval(), // 날짜 간격 최적화
+                interval: _calculateDateInterval(allData), // 날짜 간격 최적화
                 getTitlesWidget: (value, meta) {
                   final dateTime = DateTime.fromMillisecondsSinceEpoch(value.toInt());
                   return Padding(
@@ -351,41 +357,19 @@ class _PriceChartState extends State<PriceChart> {
   
   // 데이터 포인트 최적화 함수
   List<PriceDateModel> _optimizePredictions() {
-    if (widget.predictions.length <= 30) {
-      return widget.predictions; // 30개 이하면 모두 표시
-    }
-    
-    // 데이터가 많을 경우 일부만 선택
-    int step = (widget.predictions.length / 30).ceil();
-    List<PriceDateModel> result = [];
-    
-    // 항상 첫번째와 마지막 데이터는 포함
-    if (widget.predictions.isNotEmpty) {
-      result.add(widget.predictions.first);
-    }
-    
-    // 중간 데이터 샘플링
-    for (int i = step; i < widget.predictions.length - step; i += step) {
-      result.add(widget.predictions[i]);
-    }
-    
-    // 마지막 데이터 추가
-    if (widget.predictions.length > 1) {
-      result.add(widget.predictions.last);
-    }
-    
-    return result;
+    // 사용하지 않으므로 빈 리스트 반환
+    return [];
   }
   
   // x축 날짜 간격 계산 함수
-  double _calculateDateInterval() {
-    if (widget.predictions.isEmpty || widget.predictions.length < 2) {
+  double _calculateDateInterval(List<Data> allData) {
+    if (allData.isEmpty || allData.length < 2) {
       return 0;
     }
     
     // 데이터 범위의 기간 계산
-    final firstDate = widget.predictions.first.data.date;
-    final lastDate = widget.predictions.last.data.date;
+    final firstDate = allData.first.date;
+    final lastDate = allData.last.date;
     final daysDifference = lastDate.difference(firstDate).inDays;
     
     // 날짜 표시 간격 최적화
