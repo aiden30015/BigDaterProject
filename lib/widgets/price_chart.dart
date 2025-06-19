@@ -243,18 +243,30 @@ class _PriceChartState extends State<PriceChart> {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 30,
+                reservedSize: 44,
                 interval: _calculateDateInterval(allData), // 날짜 간격 최적화
                 getTitlesWidget: (value, meta) {
                   final dateTime = DateTime.fromMillisecondsSinceEpoch(value.toInt());
                   return Padding(
                     padding: const EdgeInsets.only(top: 5.0),
-                    child: Text(
-                      DateFormat('MM/dd').format(dateTime),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          DateFormat('MM').format(dateTime),
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          DateFormat('dd').format(dateTime),
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 10,
                       ),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -353,12 +365,6 @@ class _PriceChartState extends State<PriceChart> {
         ),
       ),
     );
-  }
-  
-  // 데이터 포인트 최적화 함수
-  List<PriceDateModel> _optimizePredictions() {
-    // 사용하지 않으므로 빈 리스트 반환
-    return [];
   }
   
   // x축 날짜 간격 계산 함수

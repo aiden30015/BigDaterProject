@@ -4,6 +4,7 @@ import 'package:big_dater_project/providers/prediction_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:big_dater_project/models/price_date_model.dart';
+import 'dart:math';
 
 class PredictionChartScreen extends ConsumerWidget {
   @override
@@ -81,11 +82,10 @@ class PredictionChartScreen extends ConsumerWidget {
               SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: () async {
-                  final now = DateTime.now();
                   final picked = await showDateRangePicker(
                     context: context,
-                    firstDate: DateTime(now.year - 5),
-                    lastDate: now,
+                    firstDate: DateTime(2023, 11, 28),
+                    lastDate: DateTime(2024, 12, 31),
                     initialDateRange: state.dateRange,
                     locale: const Locale('ko'),
                   );
@@ -139,11 +139,20 @@ class PredictionChartScreen extends ConsumerWidget {
     if (dataList.isEmpty) {
       return Center(child: Text('데이터가 없습니다.'));
     }
+
+    // y축 min/max 계산
+    final minY = dataList.map((e) => e.open).reduce(min);
+    final maxY = dataList.map((e) => e.open).reduce(max);
+    final range = maxY - minY;
+    final interval = range > 0 ? (range / 5).ceilToDouble() : 1; // y축 라벨 5개 이하로 제한
+
     return Container(
       height: 300,
       padding: EdgeInsets.all(16),
       child: LineChart(
         LineChartData(
+          minY: minY,
+          maxY: maxY,
           gridData: FlGridData(show: true),
           titlesData: FlTitlesData(
             bottomTitles: AxisTitles(
@@ -153,17 +162,41 @@ class PredictionChartScreen extends ConsumerWidget {
                   int idx = value.toInt();
                   if (idx < 0 || idx >= dataList.length) return Text('');
                   final date = dataList[idx].date;
-                  return Text(DateFormat('MM/dd').format(date), style: TextStyle(fontSize: 10));
+                  return Text(
+                    DateFormat('MM\ndd').format(date),
+                    style: TextStyle(fontSize: 8),
+                  );
                 },
               ),
             ),
-            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: interval.toDouble(),
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) {
+                  // 정상적인 값만 표시
+                  if (value < minY || value > maxY) return const SizedBox.shrink();
+                  String formattedValue;
+                  if (value >= 1000000) {
+                    formattedValue = '${(value / 1000000).toStringAsFixed(1)}M';
+                  } else if (value >= 1000) {
+                    formattedValue = '${(value / 1000).toStringAsFixed(0)}K';
+                  } else {
+                    formattedValue = value.round().toString();
+                  }
+                  return Text(
+                    formattedValue,
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                  );
+                },
+              ),
+            ),
             topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
             rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           borderData: FlBorderData(show: false),
           lineBarsData: [
-            // 예측 가격 라인
             LineChartBarData(
               spots: [
                 for (int i = 0; i < dataList.length; i++)
