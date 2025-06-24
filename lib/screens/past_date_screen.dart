@@ -427,7 +427,7 @@ class _PastDateScreenState extends ConsumerState<PastDateScreen> {
           ),
           SizedBox(height: 8),
           Text(
-            '${dateFormatter.format(chartData.first.date)} ~ ${dateFormatter.format(chartData.last.date)}',
+            '${dateFormatter.format(chartData.first.date)}(${chartData.first.date.year}) ~ ${dateFormatter.format(chartData.last.date)}(${chartData.last.date.year})',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
           SizedBox(height: 16),
