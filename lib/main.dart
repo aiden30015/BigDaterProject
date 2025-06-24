@@ -1,7 +1,6 @@
 import 'package:big_dater_project/screens/ai_chart_screen.dart';
 import 'package:big_dater_project/screens/past_date_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:big_dater_project/screens/prediction_chart_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -83,7 +82,6 @@ class _CryptoAppState extends State<CryptoApp> with SingleTickerProviderStateMix
                   controller: _tabController,
                   tabs: [
                     Tab(text: '과거데이터'),
-                    Tab(text: '현재시세'),
                     Tab(text: 'AI 동향 예측'),
                   ],
                   labelColor: Colors.white,
@@ -106,7 +104,6 @@ class _CryptoAppState extends State<CryptoApp> with SingleTickerProviderStateMix
           controller: _tabController,
           children: [
             PastDateScreen(),
-            PredictionChartScreen(),
             AiChartScreen(),
           ],
         ),
