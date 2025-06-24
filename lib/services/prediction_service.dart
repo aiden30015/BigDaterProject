@@ -124,12 +124,13 @@ class PredictionService {
   }
 
   Future<Map<String, dynamic>> fetchPriceDataRaw(DateTime startDate, DateTime endDate) async {
+    final params = {
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
+    };
     final response = await _dio.get(
       '$baseUrl/data',
-      queryParameters: {
-        'start_date': startDate.toIso8601String(),
-        'end_date': endDate.toIso8601String(),
-      },
+      queryParameters: params,
     );
     return response.data;
   }
