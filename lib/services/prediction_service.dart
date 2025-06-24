@@ -10,6 +10,37 @@ class PredictionService {
   // 서버 기본 URL
   static const String baseUrl = 'http://127.0.0.1:8000';
 
+  // LSTM 모델 예측 데이터 가져오기
+  Future<List<Predictions>> fetchLstmPredictions() async {
+    try {
+      final response = await _dio.get('$baseUrl/predict');
+      
+      if (response.statusCode == 200) {
+        print('LSTM 예측 응답: ${response.data}');
+        
+        if (response.data == null) {
+          return [];
+        }
+        
+        // API 응답 형식에 맞게 파싱
+        final Map<String, dynamic> data = response.data;
+        
+        if (data.containsKey('predictions') && data['predictions'] is List) {
+          List<dynamic> predictions = data['predictions'];
+          return predictions.map<Predictions>((item) {
+            return Predictions(
+              date: DateTime.parse(item['date']),
+              predicted_price: double.parse(item['predicted_price'].toString()),
+            );
+          }).toList();
+        }
+      }
+    } catch (e) {
+      print('LSTM 예측 데이터 가져오기 오류: $e');
+    }
+    return [];
+  }
+
   // 예측 데이터 가져오기
   Future<List<Predictions>> fetchPredictions(DateTime startDate, DateTime endDate) async {
     try {
@@ -120,14 +151,22 @@ class PredictionService {
       return [];
     }
     return [];
-  
   }
 
-  Future<Map<String, dynamic>> fetchPriceDataRaw(DateTime startDate, DateTime endDate) async {
+  Future<Map<String, dynamic>> fetchPriceDataRaw(DateTime startDate, DateTime endDate, {int? limit, int? page}) async {
     final params = {
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
     };
+    
+    if (limit != null) {
+      params['limit'] = limit.toString();
+    }
+    
+    if (page != null) {
+      params['page'] = page.toString();
+    }
+    
     final response = await _dio.get(
       '$baseUrl/data',
       queryParameters: params,
